@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Report Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;700&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Telugu:wght@400;500;700&family=Noto+Sans+Kannada:wght@400;500;700&family=Noto+Sans+Malayalam:wght@400;500;700&family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', 'Noto Sans', sans-serif; }
+        .lang-ta { font-family: 'Noto Sans Tamil', sans-serif; }
+        .lang-hi { font-family: 'Noto Sans Devanagari', sans-serif; }
+        .lang-te { font-family: 'Noto Sans Telugu', sans-serif; }
+        .lang-kn { font-family: 'Noto Sans Kannada', sans-serif; }
+        .lang-ml { font-family: 'Noto Sans Malayalam', sans-serif; }
+        .lang-bn { font-family: 'Noto Sans Bengali', sans-serif; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #report-upload { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
+
+    <div class="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-10 space-y-8">
+        <!-- Header Section -->
+        <div class="text-center">
+            <h1 data-translate-key="header_title" class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                Medical Report Analyzer
+            </h1>
+            <p data-translate-key="header_subtitle" class="mt-4 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Paste your report text or upload a photo to get a simple explanation.
+            </p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="space-y-6">
+            <div>
+                <label for="language-select" data-translate-key="language_label" class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Choose Language
+                </label>
+                <select id="language-select" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                    <option value="en">English</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    <option value="ml">മലയാളം (Malayalam)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                </select>
+            </div>
+             <div>
+                <label for="report-input" data-translate-key="paste_label" class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Paste Report Text
+                </label>
+                <textarea id="report-input" rows="8" class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"></textarea>
+            </div>
+
+            <div data-translate-key="or_divider" class="text-center text-gray-500 dark:text-gray-400 font-semibold">OR</div>
+
+            <div>
+                <label for="report-upload-label" data-translate-key="upload_label" class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Upload Report Image
+                </label>
+                <input type="file" id="report-upload" accept="image/*">
+                <label id="report-upload-label" for="report-upload" class="flex justify-center w-full h-32 px-4 transition bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none">
+                    <span id="upload-prompt" class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <span data-translate-key="upload_prompt" class="font-medium text-gray-600 dark:text-gray-400">
+                            Click to upload a photo
+                        </span>
+                    </span>
+                    <img id="image-preview" class="hidden h-full py-2 object-contain" alt="Medical report preview"/>
+                </label>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="text-center">
+            <button id="analyze-btn" data-translate-key="analyze_button" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-xl text-lg transition-transform transform hover:scale-105 duration-300 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800">
+                Analyze
+            </button>
+        </div>
+
+        <!-- Output Section -->
+        <div id="output-section" class="pt-6 border-t border-gray-200 dark:border-gray-700 hidden">
+             <h2 data-translate-key="analysis_title" class="text-2xl font-bold text-center mb-4">Analysis</h2>
+             <div id="loader" class="flex justify-center items-center py-8 hidden">
+                 <div class="spinner"></div>
+                 <p data-translate-key="analyzing_text" class="ml-4 text-lg">Analyzing...</p>
+             </div>
+             <div id="result" class="p-6 bg-gray-100 dark:bg-gray-900/50 rounded-xl space-y-4 text-lg leading-relaxed whitespace-pre-wrap"></div>
+             <div id="error-message" class="hidden p-6 mt-4 text-center text-red-800 bg-red-100 dark:bg-red-900/30 dark:text-red-300 rounded-lg text-lg font-semibold"></div>
+        </div>
+        
+        <!-- Disclaimer -->
+        <div class="pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
+             <p class="text-sm text-red-600 dark:text-red-400 font-semibold">
+                <strong data-translate-key="disclaimer_title" class="font-bold">Disclaimer:</strong>
+                <span data-translate-key="disclaimer_text">This tool provides information for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.</span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyAnKLUnnaNa9iErhdtc3tuihUcFou6z8a0"; // <--- PASTE YOUR GOOGLE AI API KEY HERE
+
+        const languageMap = {
+            'en': 'English',
+            'ta': 'Tamil',
+            'hi': 'Hindi',
+            'te': 'Telugu',
+            'kn': 'Kannada',
+            'ml': 'Malayalam',
+            'bn': 'Bengali'
+        };
+
+        const translations = {
+            'en': {
+                page_title: 'Medical Report Analyzer',
+                header_title: 'Medical Report Analyzer',
+                header_subtitle: 'Paste your report text or upload a photo to get a simple explanation.',
+                language_label: 'Choose Language',
+                paste_label: 'Paste Report Text',
+                paste_placeholder: 'Paste the text from your medical report here...',
+                or_divider: 'OR',
+                upload_label: 'Upload Report Image',
+                upload_prompt: 'Click to upload a photo',
+                analyze_button: 'Analyze',
+                analysis_title: 'Analysis',
+                analyzing_text: 'Analyzing...',
+                disclaimer_title: 'Disclaimer:',
+                disclaimer_text: 'This tool provides information for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.',
+                error_no_api_key: 'Application not configured.\nThe developer needs to add a Google AI API key to the script file.',
+                error_no_input: 'Please either paste the report text or upload a photo of the report.',
+                error_general: 'An error occurred. Please try again later.',
+                error_safety: 'Response was blocked due to safety settings. The report might contain sensitive content.',
+                error_bad_response: 'Failed to get a valid response from the AI. Please try again with a clearer picture or by pasting the text.'
+            },
+            'ta': {
+                page_title: 'மருத்துவ அறிக்கை பகுப்பாய்வி',
+                header_title: 'மருத்துவ அறிக்கை பகுப்பாய்வி',
+                header_subtitle: 'எளிய விளக்கத்தைப் பெற, உங்கள் அறிக்கை உரையை ஒட்டவும் அல்லது புகைப்படத்தைப் பதிவேற்றவும்.',
+                language_label: 'மொழியைத் தேர்ந்தெடுக்கவும்',
+                paste_label: 'அறிக்கை உரையை ஒட்டவும்',
+                paste_placeholder: 'உங்கள் மருத்துவ அறிக்கையிலிருந்து உரையை இங்கே ஒட்டவும்...',
+                or_divider: 'அல்லது',
+                upload_label: 'அறிக்கை படத்தை பதிவேற்றவும்',
+                upload_prompt: 'புகைப்படத்தைப் பதிவேற்ற கிளிக் செய்யவும்',
+                analyze_button: 'பகுப்பாய்வு செய்',
+                analysis_title: 'பகுப்பாய்வு',
+                analyzing_text: 'பகுப்பாய்வு செய்கிறது...',
+                disclaimer_title: 'பொறுப்புத் துறப்பு:',
+                disclaimer_text: 'இந்த கருவி கல்வி நோக்கங்களுக்காக மட்டுமே தகவல்களை வழங்குகிறது மற்றும் தொழில்முறை மருத்துவ ஆலோசனை, நோயறிதல் அல்லது சிகிச்சைக்கு மாற்றாக இல்லை. ஒரு மருத்துவ நிலை குறித்து உங்களுக்கு ஏதேனும் கேள்விகள் இருந்தால் எப்போதும் உங்கள் மருத்துவர் அல்லது பிற தகுதிவாய்ந்த சுகாதார வழங்குநரின் ஆலோசனையைப் பெறவும்.',
+                error_no_api_key: 'பயன்பாடு கட்டமைக்கப்படவில்லை.\nடெவலப்பர் ஸ்கிரிப்ட் கோப்பில் கூகிள் AI API விசையை சேர்க்க வேண்டும்.',
+                error_no_input: 'அறிக்கை உரையை ஒட்டவும் அல்லது அறிக்கையின் புகைப்படத்தைப் பதிவேற்றவும்.',
+                error_general: 'ஒரு பிழை ஏற்பட்டது. பின்னர் மீண்டும் முயற்சிக்கவும்.',
+                error_safety: 'பாதுகாப்பு அமைப்புகளின் காரணமாக பதில் தடுக்கப்பட்டது. அறிக்கையில் முக்கியமான உள்ளடக்கம் இருக்கலாம்.',
+                error_bad_response: 'AI இலிருந்து சரியான பதிலைப் பெற முடியவில்லை. தெளிவான படம் அல்லது உரையை ஒட்டுவதன் மூலம் மீண்டும் முயற்சிக்கவும்.'
+            },
+            'hi': {
+                page_title: 'मेडिकल रिपोर्ट विश्लेषक',
+                header_title: 'मेडिकल रिपोर्ट विश्लेषक',
+                header_subtitle: 'सरल स्पष्टीकरण प्राप्त करने के लिए अपनी रिपोर्ट का टेक्स्ट पेस्ट करें या एक तस्वीर अपलोड करें।',
+                language_label: 'भाषा चुनें',
+                paste_label: 'रिपोर्ट टेक्स्ट पेस्ट करें',
+                paste_placeholder: 'अपनी मेडिकल रिपोर्ट से टेक्स्ट यहाँ पेस्ट करें...',
+                or_divider: 'या',
+                upload_label: 'रिपोर्ट छवि अपलोड करें',
+                upload_prompt: 'एक तस्वीर अपलोड करने के लिए क्लिक करें',
+                analyze_button: 'विश्लेषण करें',
+                analysis_title: 'विश्लेषण',
+                analyzing_text: 'विश्लेषण हो रहा है...',
+                disclaimer_title: 'अस्वीकरण:',
+                disclaimer_text: 'यह उपकरण केवल शैक्षिक उद्देश्यों के लिए जानकारी प्रदान करता है और पेशेवर चिकित्सा सलाह, निदान या उपचार का विकल्प नहीं है। किसी भी चिकित्सा स्थिति के बारे में आपके किसी भी प्रश्न के लिए हमेशा अपने चिकित्सक या अन्य योग्य स्वास्थ्य प्रदाता की सलाह लें।',
+                error_no_api_key: 'एप्लिकेशन कॉन्फ़िगर नहीं है।\nडेवलपर को स्क्रिप्ट फ़ाइल में एक Google AI API कुंजी जोड़ने की आवश्यकता है।',
+                error_no_input: 'कृपया या तो रिपोर्ट टेक्स्ट पेस्ट करें या रिपोर्ट की एक तस्वीर अपलोड करें।',
+                error_general: 'एक त्रुटि हुई। कृपया बाद में पुन: प्रयास करें।',
+                error_safety: 'सुरक्षा सेटिंग्स के कारण प्रतिक्रिया अवरुद्ध कर दी गई थी। रिपोर्ट में संवेदनशील सामग्री हो सकती है।',
+                error_bad_response: 'एआई से वैध प्रतिक्रिया प्राप्त करने में विफल। कृपया एक स्पष्ट तस्वीर के साथ या पाठ चिपकाकर पुनः प्रयास करें।'
+            },
+            'te': {
+                page_title: 'వైద్య నివేదిక విశ్లేషకం',
+                header_title: 'వైద్య నివేదిక విశ్లేషకం',
+                header_subtitle: 'సాధారణ వివరణ పొందడానికి మీ నివేదిక వచనాన్ని అతికించండి లేదా ఫోటోను అప్‌లోడ్ చేయండి.',
+                language_label: 'భాషను ఎంచుకోండి',
+                paste_label: 'నివేదిక వచనాన్ని అతికించండి',
+                paste_placeholder: 'మీ వైద్య నివేదిక నుండి వచనాన్ని ఇక్కడ అతికించండి...',
+                or_divider: 'లేదా',
+                upload_label: 'నివేదిక చిత్రాన్ని అప్‌లోడ్ చేయండి',
+                upload_prompt: 'ఫోటోను అప్‌లోడ్ చేయడానికి క్లిక్ చేయండి',
+                analyze_button: 'విశ్లేషించండి',
+                analysis_title: 'విశ్లేషణ',
+                analyzing_text: 'విశ్లేషిస్తోంది...',
+                disclaimer_title: 'నిరాకరణ:',
+                disclaimer_text: 'ఈ సాధనం విద్యా ప్రయోజనాల కోసం మాత్రమే సమాచారాన్ని అందిస్తుంది మరియు వృత్తిపరమైన వైద్య సలహా, రోగ నిర్ధారణ లేదా చికిత్సకు ప్రత్యామ్నాయం కాదు. వైద్య పరిస్థితికి సంబంధించి మీకు ఏవైనా ప్రశ్నలు ఉంటే ఎల్లప్పుడూ మీ వైద్యుడు లేదా ఇతర అర్హతగల ఆరోగ్య ప్రదాత సలహా తీసుకోండి.',
+                error_no_api_key: 'అప్లికేషన్ కాన్ఫిగర్ చేయబడలేదు.\nడెవలపర్ స్క్రిప్ట్ ఫైల్‌కు Google AI API కీని జోడించాలి.',
+                error_no_input: 'దయచేసి నివేదిక వచనాన్ని అతికించండి లేదా నివేదిక యొక్క ఫోటోను అప్‌లోడ్ చేయండి.',
+                error_general: 'లోపం సంభవించింది. దయచేసి తర్వాత మళ్లీ ప్రయత్నించండి.',
+                error_safety: 'భద్రతా సెట్టింగ్‌ల కారణంగా ప్రతిస్పందన బ్లాక్ చేయబడింది. నివేదికలో సున్నితమైన కంటెంట్ ఉండవచ్చు.',
+                error_bad_response: 'AI నుండి చెల్లుబాటు అయ్యే ప్రతిస్పందనను పొందడంలో విఫలమైంది. దయచేసి స్పష్టమైన చిత్రంతో లేదా వచనాన్ని అతికించడం ద్వారా మళ్లీ ప్రయత్నించండి.'
+            },
+             'kn': {
+                page_title: 'ವೈದ್ಯಕೀಯ ವರದಿ ವಿಶ್ಲೇಷಕ',
+                header_title: 'ವೈದ್ಯಕೀಯ ವರದಿ ವಿಶ್ಲೇಷಕ',
+                header_subtitle: 'ಸರಳ ವಿವರಣೆಯನ್ನು ಪಡೆಯಲು ನಿಮ್ಮ ವರದಿಯ ಪಠ್ಯವನ್ನು ಅಂಟಿಸಿ ಅಥವಾ ಫೋಟೋವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.',
+                language_label: 'ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ',
+                paste_label: 'ವರದಿ ಪಠ್ಯವನ್ನು ಅಂಟಿಸಿ',
+                paste_placeholder: 'ನಿಮ್ಮ ವೈದ್ಯಕೀಯ ವರದಿಯಿಂದ ಪಠ್ಯವನ್ನು ಇಲ್ಲಿ ಅಂಟಿಸಿ...',
+                or_divider: 'ಅಥವಾ',
+                upload_label: 'ವರದಿ ಚಿತ್ರವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
+                upload_prompt: 'ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ',
+                analyze_button: 'ವಿಶ್ಲೇಷಿಸಿ',
+                analysis_title: 'ವಿಶ್ಲೇಷಣೆ',
+                analyzing_text: 'ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...',
+                disclaimer_title: 'ಹಕ್ಕುತ್ಯಾಗ:',
+                disclaimer_text: 'ಈ ಉಪಕರಣವು ಶೈಕ್ಷಣಿಕ ಉದ್ದೇಶಗಳಿಗಾಗಿ ಮಾತ್ರ ಮಾಹಿತಿಯನ್ನು ಒದಗಿಸುತ್ತದೆ ಮತ್ತು ವೃತ್ತಿಪರ ವೈದ್ಯಕೀಯ ಸಲಹೆ, ರೋಗನಿರ್ಣಯ ಅಥವಾ ಚಿಕಿತ್ಸೆಗೆ ಬದಲಿಯಾಗಿಲ್ಲ. ವೈದ್ಯಕೀಯ ಸ್ಥಿತಿಗೆ ಸಂಬಂಧಿಸಿದಂತೆ ನೀವು ಹೊಂದಿರುವ ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳೊಂದಿಗೆ ಯಾವಾಗಲೂ ನಿಮ್ಮ ವೈದ್ಯರು ಅಥವಾ ಇತರ ಅರ್ಹ ಆರೋಗ್ಯ ಪೂರೈಕೆದಾರರ ಸಲಹೆಯನ್ನು ಪಡೆಯಿರಿ.',
+                error_no_api_key: 'ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿಲ್ಲ.\nಡೆವಲಪರ್ ಸ್ಕ್ರಿಪ್ಟ್ ಫೈಲ್‌ಗೆ Google AI API ಕೀಯನ್ನು ಸೇರಿಸುವ ಅಗತ್ಯವಿದೆ.',
+                error_no_input: 'ದಯವಿಟ್ಟು ವರದಿ ಪಠ್ಯವನ್ನು ಅಂಟಿಸಿ ಅಥವಾ ವರದಿಯ ಫೋಟೋವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.',
+                error_general: 'ದೋಷ ಸಂಭವಿಸಿದೆ. ದಯವಿಟ್ಟು ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+                error_safety: 'ಸುರಕ್ಷತಾ ಸೆಟ್ಟಿಂಗ್‌ಗಳಿಂದಾಗಿ ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ. ವರದಿಯು ಸೂಕ್ಷ್ಮ ವಿಷಯವನ್ನು ಹೊಂದಿರಬಹುದು.',
+                error_bad_response: 'AI ನಿಂದ ಮಾನ್ಯವಾದ ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಸ್ಪಷ್ಟವಾದ ಚಿತ್ರದೊಂದಿಗೆ ಅಥವಾ ಪಠ್ಯವನ್ನು ಅಂಟಿಸುವ ಮೂಲಕ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.'
+            },
+            'ml': {
+                page_title: 'മെഡിക്കൽ റിപ്പോർട്ട് അനലൈസർ',
+                header_title: 'മെഡിക്കൽ റിപ്പോർട്ട് അനലൈസർ',
+                header_subtitle: 'ലളിതമായ വിശദീകരണം ലഭിക്കുന്നതിന് നിങ്ങളുടെ റിപ്പോർട്ട് ടെക്സ്റ്റ് ഒട്ടിക്കുക അല്ലെങ്കിൽ ഒരു ഫോട്ടോ അപ്‌ലോഡ് ചെയ്യുക.',
+                language_label: 'ഭാഷ തിരഞ്ഞെടുക്കുക',
+                paste_label: 'റിപ്പോർട്ട് ടെക്സ്റ്റ് ഒട്ടിക്കുക',
+                paste_placeholder: 'നിങ്ങളുടെ മെഡിക്കൽ റിപ്പോർട്ടിൽ നിന്ന് ടെക്സ്റ്റ് ഇവിടെ ഒട്ടിക്കുക...',
+                or_divider: 'അഥവാ',
+                upload_label: 'റിപ്പോർട്ട് ചിത്രം അപ്‌ലോഡ് ചെയ്യുക',
+                upload_prompt: 'ഒരു ഫോട്ടോ അപ്‌ലോഡ് ചെയ്യാൻ ക്ലിക്കുചെയ്യുക',
+                analyze_button: 'വിശകലനം ചെയ്യുക',
+                analysis_title: 'വിശകലനം',
+                analyzing_text: 'വിശകലനം ചെയ്യുന്നു...',
+                disclaimer_title: 'നിരാകരണം:',
+                disclaimer_text: 'ഈ ഉപകരണം വിദ്യാഭ്യാസപരമായ ആവശ്യങ്ങൾക്കായി മാത്രം വിവരങ്ങൾ നൽകുന്നു, ഇത് പ്രൊഫഷണൽ മെഡിക്കൽ ഉപദേശം, രോഗനിർണയം, അല്ലെങ്കിൽ ചികിത്സയ്ക്ക് പകരമാവില്ല. ഒരു മെഡിക്കൽ അവസ്ഥയെക്കുറിച്ച് നിങ്ങൾക്ക് ഉണ്ടാകാവുന്ന ഏത് ചോദ്യങ്ങൾക്കും എല്ലായ്പ്പോഴും നിങ്ങളുടെ ഡോക്ടറുടെയോ മറ്റ് യോഗ്യതയുള്ള ആരോഗ്യ ദാതാവിന്റെയോ ഉപദേശം തേടുക.',
+                error_no_api_key: 'അപ്ലിക്കേഷൻ കോൺഫിഗർ ചെയ്തിട്ടില്ല.\nഡെവലപ്പർ സ്ക്രിപ്റ്റ് ഫയലിലേക്ക് ഒരു Google AI API കീ ചേർക്കേണ്ടതുണ്ട്.',
+                error_no_input: 'ദയവായി റിപ്പോർട്ട് ടെക്സ്റ്റ് ഒട്ടിക്കുക അല്ലെങ്കിൽ റിപ്പോർട്ടിന്റെ ഒരു ഫോട്ടോ അപ്‌ലോഡ് ചെയ്യുക.',
+                error_general: 'ഒരു പിശക് സംഭവിച്ചു. ദയവായി പിന്നീട് വീണ്ടും ശ്രമിക്കുക.',
+                error_safety: 'സുരക്ഷാ ക്രമീകരണങ്ങൾ കാരണം പ്രതികരണം തടഞ്ഞു. റിപ്പോർട്ടിൽ സെൻസിറ്റീവായ ഉള്ളടക്കം അടങ്ങിയിരിക്കാം.',
+                error_bad_response: 'AI-യിൽ നിന്ന് സാധുവായ പ്രതികരണം ലഭിക്കുന്നതിൽ പരാജയപ്പെട്ടു. ദയവായി വ്യക്തമായ ചിത്രമോ അല്ലെങ്കിൽ ടെക്സ്റ്റ് ഒട്ടിച്ചോ വീണ്ടും ശ്രമിക്കുക.'
+            },
+            'bn': {
+                page_title: 'মেডিকেল রিপোর্ট বিশ্লেষক',
+                header_title: 'মেডিকেল রিপোর্ট বিশ্লেষক',
+                header_subtitle: 'সহজ ব্যাখ্যা পেতে আপনার রিপোর্টের পাঠ্য পেস্ট করুন বা একটি ছবি আপলোড করুন।',
+                language_label: 'ভাষা নির্বাচন করুন',
+                paste_label: 'রিপোর্ট টেক্সট পেস্ট করুন',
+                paste_placeholder: 'আপনার মেডিকেল রিপোর্ট থেকে পাঠ্য এখানে পেস্ট করুন...',
+                or_divider: 'অথবা',
+                upload_label: 'রিপোর্ট চিত্র আপলোড করুন',
+                upload_prompt: 'একটি ছবি আপলোড করতে ক্লিক করুন',
+                analyze_button: 'विश्लेषण করুন',
+                analysis_title: 'বিশ্লেষণ',
+                analyzing_text: 'বিশ্লেষণ করা হচ্ছে...',
+                disclaimer_title: 'দাবিত্যাগ:',
+                disclaimer_text: 'এই সরঞ্জামটি শুধুমাত্র শিক্ষাগত উদ্দেশ্যে তথ্য সরবরাহ করে এবং পেশাদার চিকিৎসা পরামর্শ, রোগ নির্ণয় বা চিকিৎসার বিকল্প নয়। কোনও চিকিৎসা পরিস্থিতি সম্পর্কে আপনার যে কোনও প্রশ্নের জন্য সর্বদা আপনার চিকিৎসক বা অন্যান্য যোগ্য স্বাস্থ্য প্রদানকারীর পরামর্শ নিন।',
+                error_no_api_key: 'অ্যাপ্লিকেশন কনফিগার করা হয়নি।\nডেভেলপারকে স্ক্রিপ্ট ফাইলে একটি Google AI API কী যোগ করতে হবে।',
+                error_no_input: 'অনুগ্রহ করে রিপোর্টের পাঠ্য পেস্ট করুন অথবা রিপোর্টের একটি ছবি আপলোড করুন।',
+                error_general: 'একটি ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।',
+                error_safety: 'সুরক্ষা సెట్టింగ్ల కారణంగా ప్రతిస్పందన బ్లాక్ చేయబడింది। звіті може міститися конфіденційний вміст।',
+                error_bad_response: 'এআই থেকে একটি বৈধ প্রতিক্রিয়া পেতে ব্যর্থ। অনুগ্রহ করে একটি পরিষ্কার ছবি দিয়ে বা পাঠ্যটি পেস্ট করে আবার চেষ্টা করুন।'
+            }
+        };
+
+        const languageSelect = document.getElementById('language-select');
+        const reportInput = document.getElementById('report-input');
+        const reportUpload = document.getElementById('report-upload');
+        const uploadPrompt = document.getElementById('upload-prompt');
+        const imagePreview = document.getElementById('image-preview');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const outputSection = document.getElementById('output-section');
+        const loader = document.getElementById('loader');
+        const resultDiv = document.getElementById('result');
+        const errorMessageDiv = document.getElementById('error-message');
+        
+        let uploadedImage = { base64: null, mimeType: null };
+
+        function setLanguage(lang) {
+            const translation = translations[lang];
+            if (!translation) return;
+
+            document.title = translation.page_title;
+            document.querySelectorAll('[data-translate-key]').forEach(el => {
+                const key = el.getAttribute('data-translate-key');
+                if (translation[key]) {
+                    el.textContent = translation[key];
+                }
+            });
+
+            reportInput.placeholder = translation.paste_placeholder;
+            
+            document.body.className = document.body.className.replace(/\blang-..\b/g, '');
+            document.body.classList.add(`lang-${lang}`);
+        }
+
+        languageSelect.addEventListener('change', (e) => setLanguage(e.target.value));
+
+        reportUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                imagePreview.classList.remove('hidden');
+                uploadPrompt.classList.add('hidden');
+                const parts = e.target.result.split(',');
+                uploadedImage.base64 = parts[1];
+                uploadedImage.mimeType = parts[0].split(':')[1].split(';')[0];
+            };
+            reader.readAsDataURL(file);
+        });
+
+        analyzeBtn.addEventListener('click', analyzeReport);
+
+        async function analyzeReport() {
+            const lang = languageSelect.value;
+
+            if (!apiKey) {
+                showError('error_no_api_key');
+                return;
+            }
+
+            const reportText = reportInput.value.trim();
+            const languageName = languageMap[lang];
+
+            if (!reportText && !uploadedImage.base64) {
+                showError('error_no_input');
+                return;
+            }
+            
+            hideError();
+            outputSection.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const baseSystemPrompt = `You are an expert medical communicator. Your task is to explain a medical report in very simple, easy-to-understand language for someone with no medical background. Do not provide a diagnosis or medical advice. The user has selected ${languageName} as their preferred language. Your explanation must adhere to the following rules STRICTLY: 1. The ENTIRE response MUST be written exclusively in the ${languageName} language. Do not include any English or any other language, unless a specific medical term has no common translation. 2. Start with a clear, friendly disclaimer, also in ${languageName}: "IMPORTANT: I am an AI assistant, not a doctor. This is a simplified explanation and NOT medical advice. Please consult a qualified doctor for any health concerns." 3. Break down complex medical terms and jargon into simple words in ${languageName}. 4. Explain what each test or value generally indicates. 5. Summarize the key findings of the report. 6. Suggest general, safe next steps, such as "It's a good idea to discuss these results with your doctor". 7. Maintain a compassionate and reassuring tone.`;
+
+            let payload;
+            if (reportText) {
+                payload = {
+                    contents: [{ parts: [{ text: `Please analyze and explain the following medical report text:\n\n${reportText}` }] }],
+                    systemInstruction: { parts: [{ text: baseSystemPrompt }] },
+                };
+            } else {
+                payload = {
+                    contents: [{
+                        parts: [
+                            { text: 'Please analyze the medical report in this image and explain it in simple terms.' },
+                            { inlineData: { mimeType: uploadedImage.mimeType, data: uploadedImage.base64 }}
+                        ]
+                    }],
+                    systemInstruction: { parts: [{ text: `Analyze the medical report from the provided image. ${baseSystemPrompt}` }] },
+                };
+            }
+
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${errorData.error.message} (Status: ${response.status})`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate?.content?.parts?.[0]?.text) {
+                    const rawText = candidate.content.parts[0].text;
+                    const formattedText = rawText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-white">$1</strong>');
+                    resultDiv.innerHTML = formattedText;
+                    resultDiv.classList.remove('hidden');
+                } else if (candidate?.finishReason === 'SAFETY') {
+                    throw new Error(translations[lang].error_safety);
+                } else {
+                   throw new Error(translations[lang].error_bad_response);
+                }
+            } catch (error) {
+                console.error("Error during analysis:", error);
+                const detail = error.message.startsWith('API error:') ? `\n\nDetails: ${error.message}` : '';
+                showError('error_general', detail);
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+        
+        function showError(key, details = '') {
+            const lang = languageSelect.value;
+            const message = (translations[lang][key] || translations['en'][key]) + details;
+            errorMessageDiv.innerHTML = message.replace(/\n/g, '<br>');
+            errorMessageDiv.classList.remove('hidden');
+            outputSection.classList.add('hidden');
+            resultDiv.classList.add('hidden');
+            loader.classList.add('hidden');
+        }
+
+        function hideError() {
+            errorMessageDiv.classList.add('hidden');
+        }
+
+        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok && response.status === 429) throw new Error('Rate limit exceeded');
+                    return response;
+                } catch (error) {
+                    if (i === retries - '1') throw error;
+                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+                }
+            }
+        }
+        
+        // Initialize the page with the default language
+        window.addEventListener('DOMContentLoaded', () => {
+            setLanguage(languageSelect.value);
+        });
+    </script>
+</body>
+</html>
+
